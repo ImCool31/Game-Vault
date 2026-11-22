@@ -3,243 +3,161 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Game Vault</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: #090b14;
-  color: white;
-  font-family: Arial, sans-serif;
-}
-header {
-  background: #111526;
-  padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #292e42;
-}
-.logo { font-size: 25px; font-weight: bold; color: #8b6cff; }
-main { max-width: 900px; margin: auto; padding: 25px; }
-h1 { font-size: 36px; }
-.card {
-  background: #151a2b;
-  padding: 22px;
-  border-radius: 14px;
-  margin: 20px 0;
-  border: 1px solid #292e42;
-}
-input {
-  display: block;
-  width: 100%;
-  padding: 13px;
-  margin: 12px 0;
-  background: #090d19;
-  border: 1px solid #343b55;
-  border-radius: 8px;
-  color: white;
-}
-button {
-  padding: 12px 18px;
-  background: #7655ee;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 5px 3px;
-}
-button:hover { background: #9278ff; }
-.secondary { background: #343b55; }
-#message { color: #b8a8ff; }
-table { width: 100%; border-collapse: collapse; }
-td, th { padding: 12px; text-align: left; border-bottom: 1px solid #343b55; }
-.hidden { display: none; }
+:root{--bg:#090b14;--panel:#151a2b;--line:#2b3350;--purple:#8065ff;--muted:#aab1c8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#fff;font-family:Arial,sans-serif}
+header{padding:24px 6%;background:#111629;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+h1{margin:0;color:#a997ff}
+button{background:var(--purple);color:white;border:0;border-radius:9px;padding:11px 16px;cursor:pointer;font-weight:bold}
+input{background:#0c1020;color:white;border:1px solid var(--line);border-radius:9px;padding:12px}
+main{padding:25px 6%;max-width:1200px;margin:auto}
+.hero{padding:30px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(120deg,#24204c,#111629)}
+.hero h2{font-size:30px;margin:0 0 10px}
+.muted{color:var(--muted)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:18px}
+.card h3{margin:0 0 8px}
+.card p{color:var(--muted);min-height:38px}
+.game{display:none;margin-top:22px;padding:20px;background:var(--panel);border:1px solid var(--line);border-radius:15px}
+.game canvas{background:#080b16;border:1px solid var(--line);max-width:100%;touch-action:none}
+#status{color:#b8aaff;margin:12px 0}
+footer{text-align:center;color:var(--muted);padding:30px}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="logo">🎮 GAME VAULT</div>
-  <button onclick="showAuth()">Account</button>
+<h1>🎮 GAME VAULT</h1>
+<div id="account">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="signup()">Sign up</button>
+<button onclick="login()">Log in</button>
+</div>
 </header>
-
 <main>
-  <h1>Welcome to Game Vault</h1>
-  <p>Your ultimate gaming destination.</p>
-
-  <section class="card">
-    <h2>👤 Your Account</h2>
-    <div id="auth">
-      <input id="username" placeholder="Username">
-      <input id="email" type="email" placeholder="Email">
-      <input id="password" type="password" placeholder="Password">
-      <button onclick="signUp()">Create Account</button>
-      <button class="secondary" onclick="signIn()">Login</button>
-    </div>
-    <div id="loggedIn" class="hidden">
-      <p id="welcome"></p>
-      <button onclick="signOut()">Logout</button>
-    </div>
-    <p id="message"></p>
-  </section>
-
-  <section class="card">
-    <h2>🏆 Leaderboard</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Username</th>
-          <th>Points</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboard">
-        <tr><td colspan="3">Loading...</td></tr>
-      </tbody>
-    </table>
-    <button onclick="loadLeaderboard()">Refresh</button>
-  </section>
-
-  <section class="card">
-    <h2>🎮 Games</h2>
-    <p>Our game collection is coming soon!</p>
-  </section>
+<section class="hero">
+<h2>Your game collection.</h2>
+<p>Play original mini-games, earn points, and beat your high scores!</p>
+<p class="muted" id="welcome">You are playing as a guest.</p>
+</section>
+<div class="controls">
+<input id="search" placeholder="Search games..." oninput="filterGames()">
+<button onclick="showLeaderboard()">Leaderboard</button>
+</div>
+<section class="grid" id="games">
+<div class="card" data-name="2048"><h3>2048</h3><p>Combine matching numbers to reach 2048.</p><button onclick="openGame('2048')">Play</button></div>
+<div class="card" data-name="slope runner"><h3>Slope Runner</h3><p>Dodge obstacles and try to survive.</p><button onclick="openGame('slope')">Play</button></div>
+<div class="card" data-name="cookie clicker"><h3>Cookie Clicker</h3><p>Click cookies and build your score.</p><button onclick="openGame('cookie')">Play</button></div>
+<div class="card" data-name="block builder"><h3>Block Builder</h3><p>Move around and build your own world.</p><button onclick="openGame('blocks')">Play</button></div>
+<div class="card" data-name="block drop"><h3>Block Drop</h3><p>Practice stacking falling blocks.</p><button onclick="openGame('drop')">Play</button></div>
+<div class="card" data-name="neon jump"><h3>Neon Jump</h3><p>Jump over obstacles and survive.</p><button onclick="openGame('jump')">Play</button></div>
+</section>
+<section class="game" id="game">
+<button onclick="closeGame()">← Back to games</button>
+<h2 id="gameTitle">Game</h2>
+<div id="status"></div>
+<div id="gameArea"></div>
+</section>
+<section class="game" id="leaderboard">
+<button onclick="closeGame()">← Back</button>
+<h2>Leaderboard</h2>
+<p class="muted">Local high scores on this device.</p>
+<ol id="scores"></ol>
+</section>
 </main>
-
+<footer>Game Vault • Original mini-games</footer>
 <script>
-const SUPABASE_URL = "https://zwrwkcgnvaomxzuyqwdc.supabase.co";
-const SUPABASE_KEY = "sb_publishable_IFNawnICgcaH74YC9WRn1w_9GgiMYaF";
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-function message(text) {
-  document.getElementById("message").textContent = text;
+let points=0, cookieCount=0, running=false, anim=0;
+const $=id=>document.getElementById(id);
+function score(n=1){points+=n;$('status').textContent='Points this session: '+points;localStorage.setItem('gv_points',points)}
+function openGame(name){
+closeGame();$('game').style.display='block';$('gameTitle').textContent=name.toUpperCase();$('gameArea').innerHTML='';$('status').textContent='Have fun!';
+if(name==='cookie')cookieGame();
+if(name==='2048')game2048();
+if(name==='blocks')blockGame();
+if(name==='slope')runnerGame('slope');
+if(name==='jump')runnerGame('jump');
+if(name==='drop')dropGame();
 }
-
-async function signUp() {
-  const username = document.getElementById("username").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  if (!username || !email || !password) {
-    message("Please fill in all fields.");
-    return;
-  }
-
-  const { error } = await db.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { username: username }
-    }
-  });
-
-  if (error) {
-    message(error.message);
-  } else {
-    message("Account created! Check your email if confirmation is required.");
-  }
+function closeGame(){running=false;cancelAnimationFrame(anim);$('game').style.display='none';$('leaderboard').style.display='none'}
+function filterGames(){let q=$('search').value.toLowerCase();document.querySelectorAll('.card').forEach(c=>c.style.display=c.dataset.name.includes(q)?'block':'none')}
+function showLeaderboard(){closeGame();$('leaderboard').style.display='block';let s=Number(localStorage.getItem('gv_points')||0);$('scores').innerHTML='<li>Guest: '+s+' points</li>'}
+function cookieGame(){
+$('gameArea').innerHTML='<h2 id="cookies">🍪 0</h2><button id="cookie">Click the cookie!</button><p>Every click earns a point.</p>';
+$('cookie').onclick=()=>{$('cookies').textContent='🍪 '+(++cookieCount);score()}
 }
-
-async function signIn() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  const { error } = await db.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) message(error.message);
-  else message("Login successful!");
+function game2048(){
+let board=Array(16).fill(0);board[0]=2;board[5]=2;
+$('gameArea').innerHTML='<p>Use arrow keys to combine matching tiles.</p><div id="board" style="display:grid;grid-template-columns:repeat(4,65px);gap:6px"></div><button onclick="new2048()">New game</button>';
+function draw(){ $('board').innerHTML=board.map(v=>'<div style="height:65px;background:#292344;border-radius:8px;display:grid;place-items:center;font-size:22px">'+(v||'')+'</div>').join('')}
+window.new2048=()=>{board=Array(16).fill(0);addTile();addTile();draw()};
+function addTile(){let empty=board.map((v,i)=>v===0?i:-1).filter(i=>i>=0);if(empty.length)board[empty[Math.floor(Math.random()*empty.length)]]=2}
+function move(dir){
+let changed=false;
+for(let r=0;r<4;r++){let ids=dir==='left'?[0,1,2,3].map(c=>r*4+c):dir==='right'?[3,2,1,0].map(c=>r*4+c):dir==='up'?[0,1,2,3].map(c=>c*4+r):[3,2,1,0].map(c=>c*4+r);
+let vals=ids.map(i=>board[i]).filter(v=>v);let out=[];
+for(let i=0;i<vals.length;i++){if(vals[i]===vals[i+1]){out.push(vals[i]*2);score(vals[i]*2);i++}else out.push(vals[i])}
+while(out.length<4)out.push(0);ids.forEach((id,i)=>{if(board[id]!==out[i])changed=true;board[id]=out[i]});
 }
-
-async function signOut() {
-  const { error } = await db.auth.signOut();
-  if (error) message(error.message);
+if(changed)addTile();draw()
 }
-
-function showAuth() {
-  document.getElementById("auth").scrollIntoView({
-    behavior: "smooth"
-  });
+window.onkeydown=e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();move(e.key.slice(5).toLowerCase())}};
+draw()
 }
-
-async function updateAccount(session) {
-  const auth = document.getElementById("auth");
-  const loggedIn = document.getElementById("loggedIn");
-
-  if (session) {
-    auth.classList.add("hidden");
-    loggedIn.classList.remove("hidden");
-
-    const username =
-      session.user.user_metadata.username ||
-      session.user.email;
-
-    document.getElementById("welcome").textContent =
-      "Welcome, " + username + "!";
-  } else {
-    auth.classList.remove("hidden");
-    loggedIn.classList.add("hidden");
-  }
+function blockGame(){
+$('gameArea').innerHTML='<p>Tap the buttons to explore and build.</p><div id="world" style="font-size:40px;padding:20px">🌳 🟩 🟩 🟩 🌳</div><button onclick="build()">Place block</button> <button onclick="moveWorld()">Explore</button>';
+window.build=()=>{$('world').textContent+=' 🧱';score(2)};
+window.moveWorld=()=>{$('world').textContent='🌲 🟩 🏠 🟩 🌳';score()}
 }
-
-async function loadLeaderboard() {
-  const tbody = document.getElementById("leaderboard");
-
-  const { data, error } = await db
-    .from("profiles")
-    .select("username, total_points")
-    .order("total_points", { ascending: false })
-    .limit(10);
-
-  if (error) {
-    tbody.innerHTML =
-      "<tr><td colspan='3'>Could not load leaderboard.</td></tr>";
-    console.error(error);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    tbody.innerHTML =
-      "<tr><td colspan='3'>No players yet!</td></tr>";
-    return;
-  }
-
-  tbody.innerHTML = data.map((player, index) => `
-    <tr>
-      <td>${index + 1}</td>
-      <td>${escapeHTML(player.username)}</td>
-      <td>${player.total_points}</td>
-    </tr>
-  `).join("");
+function runnerGame(type){
+$('gameArea').innerHTML='<p>Press SPACE or tap the screen to jump.</p><canvas id="run" width="520" height="220"></canvas>';
+let c=$('run'),ctx=c.getContext('2d'),y=165,vy=0,x=520,alive=true;
+running=true;
+function jump(){if(y>=164)vy=-11}
+c.onclick=jump;window.onkeydown=e=>{if(e.code==='Space')jump()};
+function frame(){
+if(!running||!alive)return;
+ctx.clearRect(0,0,520,220);ctx.fillStyle='#262047';ctx.fillRect(0,185,520,35);
+vy+=.5;y+=vy;if(y>165){y=165;vy=0}
+x-=5;if(x< -25)x=520;
+ctx.fillStyle='#9b83ff';ctx.fillRect(65,y,25,25);
+ctx.fillStyle='#ff668c';ctx.fillRect(x,160,25,25);
+if(x<90&&x>40&&y>140){alive=false;$('status').textContent='Game over! Points: '+points;return}
+if(x===520)score();
+ctx.fillStyle='white';ctx.fillText('Jump to avoid the blocks!',10,20);
+anim=requestAnimationFrame(frame)
 }
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[char]);
+frame()
 }
-
-db.auth.onAuthStateChange((event, session) => {
-  updateAccount(session);
-});
-
-(async () => {
-  const { data } = await db.auth.getSession();
-  updateAccount(data.session);
-  loadLeaderboard();
-})();
+function dropGame(){
+$('gameArea').innerHTML='<p>Tap to drop a block and earn points.</p><div id="stack" style="font-size:32px;min-height:120px">🟦</div><button onclick="drop()">Drop block</button>';
+window.drop=()=>{$('stack').textContent+=' 🟦';score()}
+}
 </script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://zwrwkcgnvaomxzuyqwdc.supabase.co';
+const SUPABASE_KEY='sb_publishable_IFNawnICgcaH74YC9WRn1w_9GgiMYaF';
+let supabaseClient=null;
+if(SUPABASE_URL.startsWith('https://')&&!SUPABASE_URL.includes('YOUR_')){
+supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+}
+async function signup(){
+if(!supabaseClient){alert('Add your Supabase URL and publishable key in the code first.');return}
+let {data,error}=await supabaseClient.auth.signUp({email:$('email').value,password:$('password').value});
+if(error)alert(error.message);else alert('Account created! Check your email if confirmation is required.');
+}
+async function login(){
+if(!supabaseClient){alert('Add your Supabase URL and publishable key in the code first.');return}
+let {data,error}=await supabaseClient.auth.signInWithPassword({email:$('email').value,password:$('password').value});
+if(error)alert(error.message);else{$('welcome').textContent='Logged in as '+data.user.email;$('account').innerHTML='<button onclick="logout()">Log out</button>'}
+}
+async function logout(){await supabaseClient.auth.signOut();location.reload()}
+</script>
 </body>
 </html>
+
