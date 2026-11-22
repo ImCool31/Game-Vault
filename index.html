@@ -110,13 +110,12 @@ td, th { padding: 12px; text-align: left; border-bottom: 1px solid #343b55; }
 </main>
 
 <script>
-const SUPABASE_URL = "sb_publishable_IFNawnICgcaH74YC9WRn1w_9GgiMYaF";
-const SUPABASE_KEY = "https://zwrwkcgnvaomxzuyqwdc.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://zwrwkcgnvaomxzuyqwdc.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_IFNawnICgcaH74YC9WRn1w_9GgiMYaF";
 const db = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
-
 function message(text) {
   document.getElementById("message").textContent = text;
 }
